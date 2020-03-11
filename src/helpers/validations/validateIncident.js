@@ -7,8 +7,8 @@ const validateIncident = {
       type: Joi.string().required(),
       location: Joi.string().required(),
       status: Joi.string().required(),
-      Images: Joi.array(),
-      Videos: Joi.array(),
+      images: Joi.array(),
+      videos: Joi.array(),
       comment: Joi.string().required()
     });
     return schema.validate(input);

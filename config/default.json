@@ -1,0 +1,4 @@
+{
+  "jwtKey": "mysecretkey",
+  "db": "postgresql://postgres:rashid123@localhost:5432/reportit"
+}

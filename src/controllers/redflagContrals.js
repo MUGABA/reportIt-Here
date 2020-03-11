@@ -1,30 +1,30 @@
 import _ from "lodash";
 
-import redFlag from "../models/redflag";
+import redFlag from "../database/models/redflagQueries";
 import validate from "../helpers/validations/validateIncident";
 const redflagContraller = {
-  fetchAllRedflags(req, res) {
+  async fetchAllRedflags(req, res) {
     const allRedflags = redFlag.getAllRedflag();
     if (allRedflags.length === 0)
       res.send({ status: 400, error: "No redflags found" });
 
     return res.status(200).send({ status: 200, data: allRedflags });
   },
-  createRedflag(req, res) {
+  async createRedflag(req, res) {
     const redflag = _.pick(req.body, [
       "createdBy",
       "type",
       "location",
       "status",
-      "Images",
-      "Videos",
+      "images",
+      "videos",
       "comment"
     ]);
 
-    const { error } = validate.validateInput(redflag);
+    const { error } = await validate.validateInput(redflag);
     if (error) return res.status(400).send({ error: error.details[0].message });
 
-    const createIt = redFlag.createRedflag(redflag);
+    const createIt = await redFlag.createRedflag(redflag);
 
     return res.status(201).send({ status: 201, data: createIt });
   },
@@ -50,14 +50,12 @@ const redflagContraller = {
         .status(404)
         .send({ status: 404, error: "redflag does not exist" });
 
-    return res
-      .status(200)
-      .send({
-        status: 200,
-        data: [
-          { id: results.id, message: `redflag if id ${redFlagId} is deleted` }
-        ]
-      });
+    return res.status(200).send({
+      status: 200,
+      data: [
+        { id: results.id, message: `redflag if id ${redFlagId} is deleted` }
+      ]
+    });
   }
 };
 

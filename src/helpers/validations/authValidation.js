@@ -22,7 +22,8 @@ const Validate = {
         .required(),
       phonenumber: Joi.string()
         .max(15)
-        .required()
+        .required(),
+      isadmin: Joi.bool()
     });
 
     return schema.validate(input);

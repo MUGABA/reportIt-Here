@@ -1,11 +1,11 @@
 import db from "../connections/conn";
 
 const RedFlagModel = {
-  async createAnIncident(incident) {
-    const queryText = `INSERT INTO incidents(createdBy,type,location,images,videos,comment)
+  async createAnIncident(userid, incident) {
+    const queryText = `INSERT INTO incidents(createdby,type,location,images,videos,comment)
     VALUES($1,$2,$3,ARRAY[$4],ARRAY[$5],$6) RETURNING *`;
     const values = [
-      incident.createdBy,
+      userid,
       incident.type,
       incident.location,
       incident.images,

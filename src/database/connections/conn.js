@@ -7,8 +7,10 @@ const pool = new Pool({
 });
 
 pool.connect((err, res) => {
+  let db = config.get("db");
+
   if (err) logger.info("Please check your connection");
-  else logger.info("Connected to reportit database ");
+  else logger.info(`Connected to ${process.env.NODE_ENV} database `);
 });
 
 export default {

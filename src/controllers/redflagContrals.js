@@ -6,13 +6,12 @@ const redflagContraller = {
   async fetchAllRedflags(req, res) {
     const allRedflags = await incidents.getAllIncidents("red-flag");
     if (allRedflags.length === 0)
-      res.send({ status: 400, error: "No redflags found" });
+      return res.status(400).send({ status: 400, error: "No redflags found" });
 
     return res.status(200).send({ status: 200, data: allRedflags });
   },
   async createRedflag(req, res) {
     const redflag = _.pick(req.body, [
-      "createdBy",
       "type",
       "location",
       "status",
@@ -21,15 +20,15 @@ const redflagContraller = {
       "comment"
     ]);
     const currentUser = req.user;
-    redflag.createdBy = currentUser.userid;
+    const { userid } = currentUser;
     if (redflag.type !== "red-flag")
       return res
         .status(400)
-        .send({ status: 400, message: "type must be red-flag" });
+        .send({ status: 400, error: "type must be red-flag" });
     const { error } = await validate.validateInput(redflag);
     if (error) return res.status(400).send({ error: error.details[0].message });
 
-    const createIt = await incidents.createAnIncident(redflag);
+    const createIt = await incidents.createAnIncident(userid, redflag);
     return res.status(201).send({ status: 201, data: createIt });
   },
   async fetchSpecificRedflag(req, res) {
@@ -56,24 +55,16 @@ const redflagContraller = {
         .status(404)
         .send({ status: 404, error: "redflag does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
         message: "You cannot delete a red-flag you did not create"
       });
 
-    const results = await incidents.deleteSpecificIncident(parseInt(redFlagId));
-
-    if (!results)
-      return res
-        .status(404)
-        .send({ status: 404, error: "redflag does not exist" });
-
+    await incidents.deleteSpecificIncident(parseInt(redFlagId));
     return res.status(200).send({
       status: 200,
-      data: [
-        { id: results.id, message: `redflag of id ${redFlagId} is deleted` }
-      ]
+      data: { id: redFlagId, message: `redflag of id ${redFlagId} is deleted` }
     });
   },
   async updateRedflagComment(req, res) {
@@ -92,10 +83,10 @@ const redflagContraller = {
         .status(404)
         .send({ status: 404, error: "redflag does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
-        message: "You cannot delete a red-flag you did not create"
+        error: "You cannot update a red-flag you did not create"
       });
 
     await incidents.updateIncidentsComment(redflag.comment, redflagId);
@@ -123,10 +114,10 @@ const redflagContraller = {
         .status(404)
         .send({ status: 404, error: "redflag does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
-        message: "You cannot delete a red-flag you did not create"
+        error: "You cannot update a red-flag you did not create"
       });
 
     await incidents.updateIncidentsComment(redflag.location, redflagId);
@@ -147,7 +138,6 @@ const redflagContraller = {
     if (error) return res.status(400).send({ error: error.details[0].message });
 
     const result = await incidents.getSpecificIncident(parseInt(redflagId));
-
     if (result.length === 0)
       return res
         .status(404)

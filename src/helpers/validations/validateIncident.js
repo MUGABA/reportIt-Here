@@ -6,7 +6,7 @@ const validateIncident = {
       createdBy: Joi.number(),
       type: Joi.string().required(),
       location: Joi.string().required(),
-      status: Joi.string().required(),
+      status: Joi.string(),
       images: Joi.array(),
       videos: Joi.array(),
       comment: Joi.string().required()

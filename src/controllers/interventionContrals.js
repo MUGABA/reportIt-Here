@@ -6,7 +6,9 @@ const interventionContraller = {
   async fetchAllInterventions(req, res) {
     const allRedflags = await incidents.getAllIncidents("intervention");
     if (allRedflags.length === 0)
-      res.send({ status: 400, error: "No interventions found" });
+      return res
+        .status(400)
+        .send({ status: 400, error: "No interventions found" });
 
     return res.status(200).send({ status: 200, data: allRedflags });
   },
@@ -20,16 +22,16 @@ const interventionContraller = {
       "videos",
       "comment"
     ]);
-    const currentUser = req.user;
-    intervention.createdBy = currentUser.userid;
+    const { userid } = req.user;
+
     if (intervention.type !== "intervention")
       return res
         .status(400)
-        .send({ status: 400, message: "type must be intervention" });
+        .send({ status: 400, error: "type must be intervention" });
     const { error } = await validate.validateInput(intervention);
     if (error) return res.status(400).send({ error: error.details[0].message });
 
-    const createIt = await incidents.createAnIncident(intervention);
+    const createIt = await incidents.createAnIncident(userid, intervention);
 
     return res.status(201).send({ status: 201, data: createIt });
   },
@@ -61,23 +63,19 @@ const interventionContraller = {
         .status(404)
         .send({ status: 404, error: "intervention does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
         message: "You cannot delete an intervention you did not create"
       });
 
-    const results = await incidents.deleteSpecificIncident(
-      parseInt(interventionId)
-    );
+    await incidents.deleteSpecificIncident(parseInt(interventionId));
     return res.status(200).send({
       status: 200,
-      data: [
-        {
-          id: results.id,
-          message: `intervention of id ${interventionId} is deleted`
-        }
-      ]
+      data: {
+        id: interventionId,
+        message: `intervention of id ${interventionId} is deleted`
+      }
     });
   },
   async updateInterventionComment(req, res) {
@@ -97,10 +95,10 @@ const interventionContraller = {
         .status(404)
         .send({ status: 404, error: "intervention does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
-        message: "You cannot delete an intervention you did not create"
+        error: "You cannot update an intervention you did not create"
       });
 
     await incidents.updateIncidentsComment(
@@ -133,10 +131,10 @@ const interventionContraller = {
         .status(404)
         .send({ status: 404, error: "intervention does not exist" });
 
-    if (userid !== result[0].createdBy)
+    if (userid !== result[0].createdby)
       return res.status(403).send({
         status: 403,
-        message:
+        error:
           "You cannot update the location of an intervention you did not create"
       });
 
@@ -175,7 +173,7 @@ const interventionContraller = {
       status: 200,
       data: {
         id: interventionId,
-        message: "Updated red-flag record’s status"
+        message: "Updated intervention record’s status"
       }
     });
   }

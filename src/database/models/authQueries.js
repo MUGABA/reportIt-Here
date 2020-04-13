@@ -2,8 +2,8 @@ import db from "../connections/conn";
 
 const AuthModel = {
   async createUserAccount(user) {
-    const queryText = `INSERT INTO users(firstname,lastname,othernames,username,email,password,phonenumber)
-    VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *`;
+    const queryText = `INSERT INTO users(firstname,lastname,othernames,username,email,password,phonenumber,isadmin)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`;
     const values = [
       user.firstname,
       user.lastname,
@@ -11,7 +11,8 @@ const AuthModel = {
       user.username,
       user.email,
       user.password,
-      user.phonenumber
+      user.phonenumber,
+      user.isadmin
     ];
 
     const { rows } = await db

@@ -13,19 +13,20 @@ const registerUser = async (req, res) => {
     "username",
     "email",
     "password",
-    "phonenumber"
+    "phonenumber",
+    "isadmin"
   ]);
 
   const { error } = await validate.validateUser(user);
   if (error) return res.status(400).send({ error: error.details[0].message });
 
-  user.password = await generatePassword(user);
+  user.password = await generatePassword(user.password);
 
   const checkUserExisttance = await User.getSpecificUser(user.email);
   if (checkUserExisttance)
     return res
       .status(400)
-      .send({ status: 400, message: "Email already taken!" });
+      .send({ status: 400, error: `user of ${user.email} already exists` });
 
   const result = await User.createUserAccount(user);
   const { userid, email, isadmin } = result;
@@ -42,13 +43,13 @@ const registerUser = async (req, res) => {
         "lastname",
         "username",
         "email",
-        "phonenumber"
+        "phonenumber",
+        "isadmin"
       ])
     });
 };
 
 const loginUser = async (req, res) => {
-  // gettuing use email and password
   const user = _.pick(req.body, ["email", "password"]);
 
   const { error } = await validate.validateLogin(user);
@@ -58,18 +59,18 @@ const loginUser = async (req, res) => {
   if (!result)
     return res
       .status(400)
-      .send({ status: 400, message: "Wrong email or password" });
+      .send({ status: 400, error: "Wrong email or password" });
 
   const { userid, email, isadmin, password } = result;
-  console.log(result);
 
   const isValid = await bcrypt.compare(user.password, password);
   if (!isValid)
-    return res.status(400).send({ message: "Wrong email or password" });
+    return res.status(400).send({ error: "Wrong email or password" });
 
   const token = await generateToken(userid, email, isadmin);
+  // 202 accepted
   return res
-    .status(201)
+    .status(202)
     .header("x-auth-token", token)
     .header("access-control-expose-headers", "x-auth-token")
     .send({
@@ -83,8 +84,6 @@ const loginUser = async (req, res) => {
         "phonenumber"
       ])
     });
-
-  // send the token to the header of the browser
 };
 
 export default {
